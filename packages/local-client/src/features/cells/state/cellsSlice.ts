@@ -6,7 +6,6 @@ import { Cell, CellTypes, InsertDirections } from "../models/cell";
 
 export interface CellsState {
   loading: boolean;
-  error: string | null;
   order: string[];
   data: {
     [key: string]: Cell;
@@ -15,7 +14,6 @@ export interface CellsState {
 
 const initialState: CellsState = {
   loading: false,
-  error: null,
   order: [],
   data: {},
 };
@@ -52,28 +50,46 @@ const save = async (dispatch: any) => {
 export const updateCellAsync = createAsyncThunk<
   void,
   { id: string; content: string }
->(
-  "cells/updateCellAsync",
-  async (_, thunkAPI) => await save(thunkAPI.dispatch)
-);
+>("cells/updateCellAsync", async (_, thunkAPI) => {
+  try {
+    await save(thunkAPI.dispatch);
+  } catch (error: any) {
+    thunkAPI.rejectWithValue({ error: error.data });
+  }
+});
 
 export const deleteCellAsync = createAsyncThunk<void, { id: string }>(
   "cells/deleteCellAsync",
-  async (_, thunkAPI) => await save(thunkAPI.dispatch)
+  async (_, thunkAPI) => {
+    try {
+      await save(thunkAPI.dispatch);
+    } catch (error: any) {
+      thunkAPI.rejectWithValue({ error: error.data });
+    }
+  }
 );
 
 export const insertCellAfterAsync = createAsyncThunk<
   void,
   { previousCellId?: string; cellType: CellTypes }
->(
-  "cells/insertCellAfterAsync",
-  async (_, thunkAPI) => await save(thunkAPI.dispatch)
-);
+>("cells/insertCellAfterAsync", async (_, thunkAPI) => {
+  try {
+    await save(thunkAPI.dispatch);
+  } catch (error: any) {
+    thunkAPI.rejectWithValue({ error: error.data });
+  }
+});
 
 export const moveCellAsync = createAsyncThunk<
   void,
   { id: string; direction: InsertDirections }
->("cells/moveCellAsync", async (_, thunkAPI) => await save(thunkAPI.dispatch));
+>("cells/moveCellAsync", async (_, thunkAPI) => {
+  try {
+    await save(thunkAPI.dispatch);
+  } catch (error: any) {
+    thunkAPI.rejectWithValue({ error: error.data });
+  }
+});
 
 export const cellsSlice = createSlice({
   name: "cells",
@@ -82,7 +98,6 @@ export const cellsSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchCellsAsync.pending, (state, action) => {
       state.loading = true;
-      //   state.error = null;
     });
     builder.addCase(fetchCellsAsync.fulfilled, (state, action) => {
       state.loading = false;
@@ -94,7 +109,6 @@ export const cellsSlice = createSlice({
     });
     builder.addCase(fetchCellsAsync.rejected, (state, action) => {
       state.loading = false;
-      //   state.error = action.payload.error.message;
     });
     builder.addCase(updateCellAsync.pending, (state, action) => {
       const { id, content } = action.meta.arg;
@@ -104,7 +118,6 @@ export const cellsSlice = createSlice({
       delete state.data[action.meta.arg.id];
       state.order = state.order.filter((id) => id !== action.meta.arg.id);
     });
-
     builder.addCase(moveCellAsync.pending, (state, action) => {
       const { direction } = action.meta.arg;
       const index = state.order.findIndex((id) => id === action.meta.arg.id);
